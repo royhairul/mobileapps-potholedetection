@@ -14,7 +14,7 @@ class YoloFastApiService {
 
   YoloFastApiService({required this.apiUrl});
 
-  Future<Map<String, num>> objectDetectionJson(String filePath) async {
+  Future<Map<String, dynamic>> objectDetectionJson(String filePath) async {
     final uri = Uri.parse('$apiUrl/img_object_detection_to_json');
 
     String imageType = '*';
@@ -34,7 +34,7 @@ class YoloFastApiService {
     final streamedResponse = await request.send();
 
     if (streamedResponse.statusCode == 200) {
-      final Map<String, num> predictions = {};
+      final Map<String, dynamic> predictions = {};
       final response = await http.Response.fromStream(streamedResponse);
       final map = jsonDecode(response.body);
       if (map['detect_objects'] is List) {
@@ -42,7 +42,7 @@ class YoloFastApiService {
         if (list.isNotEmpty) {
           for (var e in list) {
             if (e is Map) {
-              predictions[e['name']] = e['confidence'];
+              predictions[e['name']] = [e['confidence'], e['area']];
             }
           }
         }
