@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:page_transition/page_transition.dart';
 import 'package:pothole_detector/shared/constants.dart';
 import 'package:pothole_detector/screens/home/home_view.dart';
 import 'package:flutter/material.dart';
@@ -14,13 +15,17 @@ class SplashView extends StatefulWidget {
 class _SplashViewState extends State<SplashView> {
   Timer? _timer;
   _startDelay() {
-    _timer = Timer(const Duration(seconds: 3), _goNext);
+    _timer = Timer(const Duration(seconds: 4), _goNext);
   }
 
   _goNext() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const HomeView()),
+      PageTransition(
+        type: PageTransitionType.fade,
+        duration: const Duration(milliseconds: 100),
+        child: HomeView(),
+      ),
     );
   }
 
@@ -51,7 +56,7 @@ class _SplashViewState extends State<SplashView> {
             children: [
               Spacer(),
               Image(
-                image: AssetImage("assets/images/70.png"),
+                image: AssetImage("assets/images/logo.png"),
                 // color: Colors.white,
                 width: 300,
               ),
@@ -89,7 +94,7 @@ class _SplashViewState extends State<SplashView> {
                     style: TextStyle(
                       color: Colors.white70,
                       fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      fontSize: 10,
                     ),
                   ),
                 ],
