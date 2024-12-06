@@ -1,25 +1,24 @@
 part of 'home_cubit.dart';
 
-class HomeState {
-  final bool loading;
-  final XFile? recognitionImage;
-  final Map<String, num> recognitions;
+@immutable
+sealed class HomeState {}
 
-  HomeState({
-    this.loading = false,
-    this.recognitionImage,
-    this.recognitions = const {},
+final class HomeInitial extends HomeState {}
+
+final class HomeLoading extends HomeState {}
+
+class HomeSuccess extends HomeState {
+  final Uint8List recognitionImage;
+  final Map<String, dynamic> recognitions;
+
+  HomeSuccess({
+    required this.recognitionImage,
+    required this.recognitions,
   });
+}
 
-  HomeState copyWith({
-    bool? loading,
-    XFile? recognitionImage,
-    Map<String, num>? recognitions,
-  }) {
-    return HomeState(
-      loading: loading ?? this.loading,
-      recognitionImage: recognitionImage ?? this.recognitionImage,
-      recognitions: recognitions ?? this.recognitions,
-    );
-  }
+final class HomeFailure extends HomeState {
+  final String error;
+
+  HomeFailure({required this.error});
 }
