@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pothole_detector/screens/home/cubit/home_cubit.dart';
+import 'package:pothole_detector/screens/home/full_view_image.dart';
 import 'package:pothole_detector/screens/home/live_detector_view.dart';
 import 'package:pothole_detector/shared/constants.dart';
 import 'package:pothole_detector/shared/supabase_service.dart';
@@ -10,6 +13,7 @@ import 'package:pothole_detector/shared/widgets/custom_button.dart';
 import 'package:pothole_detector/shared/yolo_fastapi_service.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:page_transition/page_transition.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
@@ -19,87 +23,6 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  Map<String, num> _recognitions = {};
-  XFile? _recognitionImage;
-  bool _loading = false;
-
-  final ImagePicker _picker = ImagePicker();
-
-  _loadImage({required bool isCamera}) async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: isCamera ? ImageSource.camera : ImageSource.gallery,
-        maxWidth: 640,
-        maxHeight: 640,
-      );
-      if (image == null) {
-        return;
-      }
-      setState(() {
-        _recognitionImage = image;
-        _loading = true;
-        _recognitions = {};
-      });
-      _detectImage(image);
-    } catch (e) {
-      checkPermissions(context);
-    }
-  }
-
-  _detectImage(XFile image) async {
-    final json = yoloFastApiService.objectDetectionJson(image.path);
-    final file = yoloFastApiService.objectDetectionFile(image.path);
-
-    try {
-      final results = await Future.wait([json, file]);
-      _recognitions = results.first as Map<String, num>;
-      _recognitionImage = results.last as XFile;
-
-      recordDataToSupabase();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
-    }
-
-    setState(() {
-      _loading = false;
-    });
-  }
-
-  // Fungsi untuk mendapatkan lokasi pengguna
-  Future<String> getCurrentLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      return '${position.latitude},${position.longitude}';
-    } catch (e) {
-      debugPrint('Error getting location: $e');
-      return 'Unknown Location';
-    }
-  }
-
-  _reset() {
-    setState(() {
-      _loading = false;
-      _recognitionImage = null;
-      _recognitions = {};
-    });
-  }
-
-  // Fungsi untuk merekam data ke Supabase
-  void recordDataToSupabase() async {
-    if (_recognitions.isNotEmpty) {
-      String location = await getCurrentLocation();
-      String damageType = recognitionResult(_recognitions.entries.first);
-
-      // Catat data ke Supabase
-      await supabaseService.recordData(location, damageType);
-    }
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -109,120 +32,265 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 239, 245, 248),
-      appBar: AppBar(
-        title: const Text("Pavement Detector"),
-        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: Colors.white
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => HomeCubit(),
         ),
-        backgroundColor: Colors.indigo[800]!,
-        actions: [
-          if (_loading)
-            IconButton(
-              onPressed: () => _reset(),
-              icon: const FaIcon(FontAwesomeIcons.trash),
-            )
-        ],
-      ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppButton(
-              text: "Open camera",
-              onPressed: () => _loadImage(isCamera: true),
-            ),
-            const SizedBox(height: 16),
-            AppButton(
-              textColor: Colors.white,
-              text: "Open gallery",
-              onPressed: () => _loadImage(isCamera: false),
-            ),
-            const SizedBox(height: 16),
-            AppButton(
-              textColor: Colors.white,
-              text: "Live Detection",
-              onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LiveDetectorView(),
-                        ),
-                      ),
-            ),
-            const SizedBox(height: 30),
-            Expanded(
-              child: Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.indigo[800]!.withOpacity(0.2), // Warna bayangan
-                      spreadRadius: 2, // Penyebaran bayangan
-                      blurRadius: 10, // Jarak blur
-                      offset: Offset(4, 4), // Posisi bayangan (x, y)
+      ],
+      child: BlocConsumer<HomeCubit, HomeState>(
+        listener: (context, state) {
+          if (state is HomeLoading) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    CircularProgressIndicator(
+                      color: Colors.indigo.shade900,
+                    ),
+                    SizedBox(width: 16),
+                    Text(
+                      'Processing...',
+                      style: TextStyle(color: Colors.indigo.shade900),
                     ),
                   ],
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                backgroundColor: const Color.fromARGB(255, 239, 245, 248),
+                shape: Border(
+                    top: BorderSide(color: Colors.indigo.shade50, width: 2)),
+              ),
+            );
+          }
+
+          if (state is HomeSuccess) {
+            ScaffoldMessenger.of(context)
+                .hideCurrentSnackBar(); // Menyembunyikan SnackBar yang sedang tampil
+          }
+
+          if (state is HomeFailure) {
+            ScaffoldMessenger.of(context)
+                .hideCurrentSnackBar(); // Menyembunyikan SnackBar yang sedang tampil
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
                   children: [
-                    !_loading ? const SizedBox(height: 10) : const Spacer(),
-                    _recognitionImage == null
-                        ? FaIcon(FontAwesomeIcons.image, size: 150, color: Colors.black26,)
-                        : FutureBuilder<Uint8List>(
-                            future: _recognitionImage!.readAsBytes(),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return FaIcon(FontAwesomeIcons.image, size: 150, color: Colors.black26,);
-                              }
-                              return Image.memory(snapshot.data!);
-                            },
-                          ),
-                    SizedBox(height: 10),
-                    if (!_loading && _recognitions.isNotEmpty) ...{
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          ..._recognitions.keys.map((r) {
-                            return Text(
-                              '$r : ${(_recognitions[r]! * 100).toStringAsFixed(2)}%',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall!
-                                  .copyWith(
-                                    color: Colors.indigo[800]!,
-                                  ),
-                            );
-                          }),
-                        ],
-                      )
-                    } else if (_loading)...{
-                      const CircularProgressIndicator(),
-                    } else ...{
-                      Text(
-                        "Detect your Image Now.",
-                        style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontStyle: FontStyle.italic,
-                              color: Colors.black26,
-                            ),
-                      ),
-                    },
-                    const SizedBox(height: 8),
+                    FaIcon(
+                      FontAwesomeIcons.faceFrown,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 16),
+                    Text(state.error, style: TextStyle(color: Colors.white)),
                   ],
                 ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          return Scaffold(
+            backgroundColor: const Color.fromARGB(255, 239, 245, 248),
+            appBar: AppBar(
+              title: const Text("Pavement Detector"),
+              titleTextStyle: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(color: Colors.white),
+              backgroundColor: Colors.indigo[800]!,
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppButton(
+                    text: "Open camera",
+                    onPressed: context.read<HomeCubit>().fromCamera,
+                  ),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    textColor: Colors.white,
+                    text: "Open gallery",
+                    onPressed: context.read<HomeCubit>().fromGallery,
+                  ),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    textColor: Colors.white,
+                    text: "Live Detection",
+                    onPressed: () => Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.fade,
+                          duration: const Duration(milliseconds: 100),
+                          child: LiveDetectorView(),
+                        )),
+                  ),
+                  const SizedBox(height: 30),
+                  Expanded(
+                    child: Container(
+                      alignment: Alignment.center,
+                      // padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        border:
+                            Border.all(color: Colors.grey.shade100, width: 5),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.indigo[800]!.withOpacity(0.2),
+                            spreadRadius: 2,
+                            blurRadius: 10,
+                            offset: Offset(4, 4),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Bagian pertama untuk menampilkan gambar atau ikon jika tidak ada gambar
+                          Positioned.fill(
+                              child: (state is HomeSuccess)
+                                  // Gambar yang terdeteksi
+                                  ? InkResponse(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                FullScreenImageView(
+                                              imageBytes:
+                                                  state.recognitionImage,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child:
+                                          Image.memory(state.recognitionImage),
+                                    )
+                                  // Teks jika tidak ada gambar terdeteksi
+                                  : const Center(
+                                      child: FaIcon(
+                                        FontAwesomeIcons.image,
+                                        size: 150,
+                                        color: Colors.black26,
+                                      ),
+                                    )),
+
+                          // Teks hasil deteksi (dengan full width)
+                          Positioned(
+                            left: 0,
+                            right:
+                                0, // Membuat Positioned mengambil lebar penuh
+                            bottom: 0, // Menempatkan teks di bagian bawah
+                            child: Container(
+                              padding: EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade200),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: state is HomeSuccess
+                                  ? state.recognitions.isEmpty
+                                      ? Center(
+                                          // Gunakan Center di sini
+                                          child: Text(
+                                            "Jalan atau Kerusakan tidak ditemukan!",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              fontStyle: FontStyle.italic,
+                                              color: Colors.redAccent,
+                                            ),
+                                          ),
+                                        )
+                                      : Wrap(
+                                          children:
+                                              state.recognitions.keys.map((r) {
+                                            return Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    FaIcon(
+                                                      FontAwesomeIcons.road,
+                                                      color: Colors
+                                                          .indigo.shade900,
+                                                      size: 20,
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    Text(
+                                                      "$r (${(state.recognitions[r][0] * 100).toInt()}%)",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .labelLarge!
+                                                          .copyWith(
+                                                            color: Colors
+                                                                .indigo[800],
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                SizedBox(height: 10),
+                                                Row(
+                                                  children: [
+                                                    FaIcon(
+                                                      FontAwesomeIcons
+                                                          .leftRight,
+                                                      color: Colors
+                                                          .indigo.shade900,
+                                                      size: 22,
+                                                    ),
+                                                    SizedBox(width: 10),
+                                                    Text(
+                                                      "${state.recognitions[r][1]} m²",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .labelLarge!
+                                                          .copyWith(
+                                                            color: Colors
+                                                                .indigo[800],
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            );
+                                          }).toList(),
+                                        )
+                                  : const Center(
+                                      child: Text(
+                                        "Detect your Image Now.",
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w500,
+                                          fontStyle: FontStyle.italic,
+                                          color: Colors.black26,
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          if (state is HomeSuccess) ...{
+                            Positioned(
+                                top: 0,
+                                right: 0,
+                                child: IconButton.filledTonal(
+                                    onPressed: () {
+                                      context.read<HomeCubit>().reset();
+                                    },
+                                    icon: FaIcon(FontAwesomeIcons.trash)))
+                          }
+                        ],
+                      ),
+                    ),
+                  )
+                ],
               ),
             ),
-            
-          ],
-        ),
+          );
+        },
       ),
     );
   }
