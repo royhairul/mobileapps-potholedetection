@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:pothole_detector/shared/constants.dart';
 
 class FullScreenImageView extends StatelessWidget {
   final Uint8List imageBytes;
@@ -17,7 +18,7 @@ class FullScreenImageView extends StatelessWidget {
             .textTheme
             .titleLarge
             ?.copyWith(color: Colors.white),
-        backgroundColor: Colors.indigo[800]!,
+        backgroundColor: Color(COLOR_PRIMARY),
       ),
       body: PhotoView(
         imageProvider: MemoryImage(imageBytes),

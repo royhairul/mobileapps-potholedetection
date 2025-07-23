@@ -1,7 +1,5 @@
-import 'package:camera/camera.dart';
-import 'package:pothole_detector/shared/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:pothole_detector/shared/constants.dart';
 import 'package:pothole_detector/shared/widgets/custom_button.dart';
 
 class LiveDetectorView extends StatelessWidget {
@@ -17,7 +15,7 @@ class LiveDetectorView extends StatelessWidget {
         titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
           color: Colors.white
         ),
-        backgroundColor: Colors.indigo[800]!,
+        backgroundColor: Color(COLOR_PRIMARY),
       ),
       body: Container(
         padding: EdgeInsets.all(20),

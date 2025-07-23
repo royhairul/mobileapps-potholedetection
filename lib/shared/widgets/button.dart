@@ -12,7 +12,7 @@ class AppButton extends StatelessWidget {
   IconData? icon;
   String text = "";
   AppButton({
-    Key? key,
+    super.key,
     required this.color,
     required this.width,
     required this.height,
@@ -23,7 +23,7 @@ class AppButton extends StatelessWidget {
     this.onTap,
     this.withIcon = false,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

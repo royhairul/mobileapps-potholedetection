@@ -1,22 +1,15 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:pothole_detector/screens/home/cubit/home_cubit.dart';
 import 'package:pothole_detector/screens/home/full_view_image.dart';
 import 'package:pothole_detector/screens/home/live_detector_view.dart';
 import 'package:pothole_detector/shared/constants.dart';
-import 'package:pothole_detector/shared/supabase_service.dart';
 import 'package:pothole_detector/shared/widgets/custom_button.dart';
-import 'package:pothole_detector/shared/yolo_fastapi_service.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
 import 'package:page_transition/page_transition.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({Key? key}) : super(key: key);
+  const HomeView({super.key});
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -46,12 +39,12 @@ class _HomeViewState extends State<HomeView> {
                 content: Row(
                   children: [
                     CircularProgressIndicator(
-                      color: Colors.indigo.shade900,
+                      color: Color(COLOR_PRIMARY),
                     ),
                     SizedBox(width: 16),
                     Text(
                       'Processing...',
-                      style: TextStyle(color: Colors.indigo.shade900),
+                      style: TextStyle(color: Color(COLOR_PRIMARY)),
                     ),
                   ],
                 ),
@@ -80,7 +73,13 @@ class _HomeViewState extends State<HomeView> {
                       color: Colors.white,
                     ),
                     SizedBox(width: 16),
-                    Text(state.error, style: TextStyle(color: Colors.white)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(state.error, style: TextStyle(color: Colors.white)),
+                        Text("Detection Not Found", style: TextStyle(color: Colors.white))
+                      ]
+                    )
                   ],
                 ),
                 backgroundColor: Colors.red,
@@ -97,10 +96,10 @@ class _HomeViewState extends State<HomeView> {
                   .textTheme
                   .titleLarge
                   ?.copyWith(color: Colors.white),
-              backgroundColor: Colors.indigo[800]!,
+              backgroundColor: Color(COLOR_PRIMARY),
             ),
             body: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(18.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -215,8 +214,7 @@ class _HomeViewState extends State<HomeView> {
                                                   children: [
                                                     FaIcon(
                                                       FontAwesomeIcons.road,
-                                                      color: Colors
-                                                          .indigo.shade900,
+                                                      color: Color(COLOR_PRIMARY),
                                                       size: 20,
                                                     ),
                                                     SizedBox(width: 10),
@@ -226,8 +224,7 @@ class _HomeViewState extends State<HomeView> {
                                                           .textTheme
                                                           .labelLarge!
                                                           .copyWith(
-                                                            color: Colors
-                                                                .indigo[800],
+                                                            color: Color(COLOR_PRIMARY),
                                                           ),
                                                     ),
                                                   ],
@@ -238,8 +235,7 @@ class _HomeViewState extends State<HomeView> {
                                                     FaIcon(
                                                       FontAwesomeIcons
                                                           .leftRight,
-                                                      color: Colors
-                                                          .indigo.shade900,
+                                                      color: Color(COLOR_PRIMARY),
                                                       size: 22,
                                                     ),
                                                     SizedBox(width: 10),
@@ -249,8 +245,7 @@ class _HomeViewState extends State<HomeView> {
                                                           .textTheme
                                                           .labelLarge!
                                                           .copyWith(
-                                                            color: Colors
-                                                                .indigo[800],
+                                                            color: Color(COLOR_PRIMARY),
                                                           ),
                                                     ),
                                                   ],
@@ -280,6 +275,7 @@ class _HomeViewState extends State<HomeView> {
                                     onPressed: () {
                                       context.read<HomeCubit>().reset();
                                     },
+                                    color: Color(COLOR_PRIMARY),
                                     icon: FaIcon(FontAwesomeIcons.trash)))
                           }
                         ],

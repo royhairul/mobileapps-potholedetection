@@ -43,11 +43,11 @@ class _SplashViewState extends State<SplashView> {
 
   @override
   Widget build(BuildContext context) {
-    kWidth = MediaQuery.of(context).size.width;
-    kHeight = MediaQuery.of(context).size.height;
+    final kWidth = MediaQuery.of(context).size.width;
+    final kHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: Colors.indigo[800]!,
-      body: const Padding(
+      backgroundColor: Color(COLOR_PRIMARY),
+      body:  Padding(
         padding: EdgeInsets.all(15.0),
         child: Center(
           child: Column(
@@ -55,10 +55,13 @@ class _SplashViewState extends State<SplashView> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Spacer(),
-              Image(
-                image: AssetImage("assets/images/logo.png"),
-                // color: Colors.white,
-                width: 300,
+               // Logo yang responsif
+              Flexible(
+                flex: 3,
+                child: Image.asset(
+                  "assets/images/logo.png",
+                  width: kWidth * 0.5, // 50% dari lebar layar
+                ),
               ),
               Column(
                 children: [
@@ -73,13 +76,14 @@ class _SplashViewState extends State<SplashView> {
                   Text(
                     "Pavement Detector",
                     style: TextStyle(
-                      color: Colors.yellowAccent,
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 28,
                     ),
                   )
                 ],
               ),
+              Spacer(),
               Spacer(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -90,7 +94,7 @@ class _SplashViewState extends State<SplashView> {
                     size: 18,
                   ),
                   Text(
-                    " 2024 - Team Poliwangi - Mobile Computing",
+                    " 2025 - Team Poliwangi - Mobile Computing",
                     style: TextStyle(
                       color: Colors.white70,
                       fontWeight: FontWeight.bold,

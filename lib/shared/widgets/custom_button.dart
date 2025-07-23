@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pothole_detector/shared/constants.dart';
 
 class AppButton extends StatelessWidget {
   final Color textColor;
@@ -10,7 +11,7 @@ class AppButton extends StatelessWidget {
   IconData? icon;
   
   AppButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.radius = 10,
@@ -18,7 +19,7 @@ class AppButton extends StatelessWidget {
     this.size = 18,
     this.withIcon = false,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,7 @@ class AppButton extends StatelessWidget {
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.all(16),
-        backgroundColor: Colors.indigo[800],
+        backgroundColor: Color(COLOR_PRIMARY),
         overlayColor: Colors.black,
         disabledBackgroundColor: Colors.black12,
         splashFactory: InkSplash.splashFactory,

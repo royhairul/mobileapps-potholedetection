@@ -13,6 +13,6 @@ abstract class Env {
 
   static const String kYoloFastApiUrl = String.fromEnvironment(
     'YOLO_API_URL',
-    defaultValue: 'https://reasonably-more-haddock.ngrok-free.app',
+    defaultValue: 'http://rwswg4g84oossosog8s08gsc.103.92.209.22.sslip.io',
   );
 }

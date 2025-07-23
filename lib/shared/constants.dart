@@ -24,3 +24,6 @@ checkPermissions(context) async {
     await Permission.locationWhenInUse.request();
   }
 }
+
+
+const int COLOR_PRIMARY = 0xFF1D545C;
