@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Access Camera -->
+	<key>NSCameraUsageDescription</key>
+	<string>We need to access camera for taking photo</string>
+	
+	<!-- Access Location -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need to access location</string>
 </dict>
 </plist>
